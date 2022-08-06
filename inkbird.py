@@ -28,7 +28,7 @@ acceptable_temp_f_bounds = (
 )
 min_notification_delay_s = 15 * 60 # If we have already sent a notification in the last 15 minutes, do not send another until 15 minutes has elapsed.
 temp_measure_poll_time_s = 4 # check temp every 4 seconds
-periodic_report_s = 2 * 60 * 60 # Every 2 hours, send a temp report no matter what
+periodic_report_s = 5 * 60 # Every 2 hours, send a temp report no matter what
 
 
 # Utility method to wrap imports with a call to pip to install first.
