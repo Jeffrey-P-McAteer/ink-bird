@@ -99,7 +99,7 @@ if __name__ == '__main__':
               if temperature_c > 60.0 and temperature_c < 80.0:
                 print('')
                 print(f'!!! Got a good reading from mac {d.addr}  characteristic={hex(characteristic)}')
-                time.sleep(100)
+                time.sleep(1)
                 subprocess.run([
                   'ding', f'!!! Got a good reading from mac {d.addr}  characteristic={hex(characteristic)} temperature_c={temperature_c}'
                 ], check=False);
