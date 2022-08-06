@@ -23,6 +23,11 @@ dev_addr = '49:42:07:00:14:3c' # device bluetooth MAC from engbird app
 temp_adjustment_deg_c = -2.5   # Sensor cannot be calibrated, app uses a s/w fix to print calibrated reading so we do same
 pushover_user_key = os.environ.get('PUSHOVER_USER_KEY', '')
 pushover_api_token = os.environ.get('PUSHOVER_API_TOKEN', '')
+acceptable_temp_f_bounds = (
+  15.0, 42.0 # if temp goes outside bounds, notification is sent
+)
+min_notification_delay_s = 15 * 60 # If we have already sent a notification in the last 15 minutes, do not send another until 15 minutes has elapsed.
+temp_measure_poll_time_s = 4 # check temp every 4 seconds
 
 # Utility method to wrap imports with a call to pip to install first.
 # > "100% idiot-proof!" -- guy on street selling rusty dependency chains.
@@ -78,7 +83,9 @@ async def main():
   global exit_flag
 
   pushover_client = pushover.Client(pushover_user_key, api_token=pushover_api_token)
-  
+  last_notification_s = 0
+
+  print(f'acceptable_temp_f_bounds = {acceptable_temp_f_bounds}')
   print(f'Querying {dev_addr}')
 
   async with bleak.BleakClient(dev_addr) as dev:
@@ -102,20 +109,27 @@ async def main():
         print('dev = bleak.BleakClient(dev_addr) ...')
         dev = bleak.BleakClient(dev_addr)
         print('No temp reading!')
-        await asyncio.sleep(2)
+        await asyncio.sleep(temp_measure_poll_time_s / 2)
         continue
 
       temp_f = c_to_f(temp_c)
       print(f'temp is {temp_c}c, {temp_f}f')
 
-      if temp_f > 60.0:
+      temp_is_acceptable = temp_f < max(acceptable_temp_f_bounds) and temp_f > min(acceptable_temp_f_bounds)
+      if not temp_is_acceptable:
+        age_since_last_notification = int(time.time()) - last_notification_s
+        if age_since_last_notification < min_notification_delay_s:
+          print(f'Not notifying because we did so {age_since_last_notification} seconds ago and we must wait at least {min_notification_delay_s}')
+          await asyncio.sleep(temp_measure_poll_time_s)
+          continue
         try:
           pushover_client.send_message(f'InkBird temperature alert: {temp_f}f', title=f'InkBird temperature alert: {temp_f}f')
+          last_notification_s = int(time.time())
         except:
           traceback.print_exc()
           pushover_client = pushover.Client(pushover_user_key, api_token=pushover_api_token)
 
-      await asyncio.sleep(4)
+      await asyncio.sleep(temp_measure_poll_time_s)
 
 
 if __name__ == '__main__':
