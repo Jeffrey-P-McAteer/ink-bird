@@ -49,9 +49,12 @@ def float_value(nums):
       num = -( (num ^ 0xffff ) + 1)
   return float(num) / 100
 
+exit_flag = False
 def signal_handler(sig, frame):
-    print('Exiting...')
-    sys.exit(0)
+  global exit_flag
+  exit_flag = True
+  print('Exiting...')
+  sys.exit(0)
 
 if __name__ == '__main__':
   signal.signal(signal.SIGINT, signal_handler)
@@ -77,6 +80,7 @@ if __name__ == '__main__':
     try:
       scanner = bluepy.btle.Scanner()
       btle_devices = scanner.scan(timeout=11)
+      num_read = 0
       
       for d in btle_devices:
         if d.addr.lower() in known_bad_macs:
@@ -85,9 +89,12 @@ if __name__ == '__main__':
         try:
           print(f'{d.addr} scan data = {d.getScanData()}')
           print(f'Attempting to read from {d.addr}')
+          num_read += 1
           dev = bluepy.btle.Peripheral(d.addr, addrType=bluepy.btle.ADDR_TYPE_PUBLIC)
           
           for characteristic in range(0x00, 0xff):
+            if exit_flag:
+              break
             try:
               #characteristic = 0x28
               print(f'characteristic={hex(characteristic)}')
@@ -96,20 +103,21 @@ if __name__ == '__main__':
 
               temperature_c = float_value(readings[0:2])
               print(f'temperature_c={temperature_c}')
-              if temperature_c > 60.0 and temperature_c < 80.0:
+              if temperature_c > 10.0 and temperature_c < 30.0:
                 print('')
                 print(f'!!! Got a good reading from mac {d.addr}  characteristic={hex(characteristic)}')
-                time.sleep(1)
-                subprocess.run([
-                  'ding', f'!!! Got a good reading from mac {d.addr}  characteristic={hex(characteristic)} temperature_c={temperature_c}'
-                ], check=False);
+                
+                with open('/tmp/inkbird_successes.txt', 'a') as fd:
+                  fd.write(f'Got a good reading from mac {d.addr}  characteristic={hex(characteristic)} temperature_c={temperature_c} raw readings = {readings} scan data = {d.getScanData()}\n')
+
+                #time.sleep(1)
                 print('')
             except:
               traceback.print_exc()
 
         except:
           traceback.print_exc()
-          if 'Failed to connect to' in traceback.format_exc():
+          if 'Failed to connect to' in traceback.format_exc() and not exit_flag:
             known_bad_macs.append( d.addr.lower() )
             #print(f'increased known_bad_macs={known_bad_macs}')
             with open('bad_macs.pickle.bin', 'wb') as fd:
@@ -117,6 +125,10 @@ if __name__ == '__main__':
 
         print('')
         print('')
+
+      if num_read < 1:
+        known_bad_macs = []
+
     except:
       traceback.print_exc()
 
