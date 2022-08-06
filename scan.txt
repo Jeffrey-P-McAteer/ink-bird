@@ -1,0 +1,66 @@
+Querying 49:42:07:00:14:3c
+[Service] 0000fff0-0000-1000-8000-00805f9b34fb: Vendor specific
+  [Characteristic] 0000fff9-0000-1000-8000-00805f9b34fb: (Handle: 57) (write) | Name: Vendor specific, Value: None 
+    [Descriptor] 00002901-0000-1000-8000-00805f9b34fb: (Handle: 59) | Value: b'reset' 
+  [Characteristic] 0000fff8-0000-1000-8000-00805f9b34fb: (Handle: 54) (read,write) | Name: Vendor specific, Value: b'\x00' 
+    [Descriptor] 00002901-0000-1000-8000-00805f9b34fb: (Handle: 56) | Value: b'his data type' 
+  [Characteristic] 0000fff7-0000-1000-8000-00805f9b34fb: (Handle: 51) (read,write) | Name: Vendor specific, Value: b'\x01~\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' 
+    [Descriptor] 00002901-0000-1000-8000-00805f9b34fb: (Handle: 53) | Value: b'run/stop recoder' 
+  [Characteristic] 0000fff6-0000-1000-8000-00805f9b34fb: (Handle: 47) (notify) | Name: Vendor specific, Value: None 
+    [Descriptor] 00002901-0000-1000-8000-00805f9b34fb: (Handle: 50) | Value: b'history data' 
+    [Descriptor] 00002902-0000-1000-8000-00805f9b34fb: (Handle: 49) | Value: b'\x00\x00' 
+  [Characteristic] 0000fff5-0000-1000-8000-00805f9b34fb: (Handle: 44) (read) | Name: Vendor specific, Value: b'\xd5\x02\x00\x00' 
+    [Descriptor] 00002901-0000-1000-8000-00805f9b34fb: (Handle: 46) | Value: b'recoder frame' 
+  [Characteristic] 0000fff4-0000-1000-8000-00805f9b34fb: (Handle: 41) (read) | Name: Vendor specific, Value: b'IB\x07\x00\x14<x(\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' 
+    [Descriptor] 00002901-0000-1000-8000-00805f9b34fb: (Handle: 43) | Value: b'measure' 
+  [Characteristic] 0000fff3-0000-1000-8000-00805f9b34fb: (Handle: 38) (read,write) | Name: Vendor specific, Value: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' 
+    [Descriptor] 00002901-0000-1000-8000-00805f9b34fb: (Handle: 40) | Value: b'cfg data2' 
+  [Characteristic] 0000fff2-0000-1000-8000-00805f9b34fb: (Handle: 35) (read) | Name: Vendor specific, Value: b'\x13\t\x00\x00\x00\xa2_' 
+    [Descriptor] 00002901-0000-1000-8000-00805f9b34fb: (Handle: 37) | Value: b'Real time data' 
+  [Characteristic] 0000fff1-0000-1000-8000-00805f9b34fb: (Handle: 32) (read,write) | Name: Vendor specific, Value: b'\x00\x06\xff\x00\x00\x00\x00x\x00\x00\x002-0\xb1^\x00\x00\x00\x00' 
+    [Descriptor] 00002901-0000-1000-8000-00805f9b34fb: (Handle: 34) | Value: b'cfg data' 
+[Service] 0000180a-0000-1000-8000-00805f9b34fb: Device Information
+  [Characteristic] 00002a50-0000-1000-8000-00805f9b34fb: (Handle: 29) (read) | Name: PnP ID, Value: b'\x01\x04\x05\x00\x00\x10\x01' 
+  [Characteristic] 00002a2a-0000-1000-8000-00805f9b34fb: (Handle: 27) (read) | Name: IEEE 11073-20601 Regulatory Cert. Data List, Value: b'\xfe\x00experimental' 
+  [Characteristic] 00002a29-0000-1000-8000-00805f9b34fb: (Handle: 25) (read) | Name: Manufacturer Name String, Value: b'Manufacturer Name' 
+  [Characteristic] 00002a28-0000-1000-8000-00805f9b34fb: (Handle: 23) (read) | Name: Software Revision String, Value: b'Software Revision' 
+  [Characteristic] 00002a27-0000-1000-8000-00805f9b34fb: (Handle: 21) (read) | Name: Hardware Revision String, Value: b'Hardware Revision' 
+  [Characteristic] 00002a26-0000-1000-8000-00805f9b34fb: (Handle: 19) (read) | Name: Firmware Revision String, Value: b'Firmware Revision' 
+  [Characteristic] 00002a25-0000-1000-8000-00805f9b34fb: (Handle: 17) (read) | Name: Serial Number String, Value: b'Serial Number' 
+  [Characteristic] 00002a24-0000-1000-8000-00805f9b34fb: (Handle: 15) (read) | Name: Model Number String, Value: b'Model Number' 
+  [Characteristic] 00002a23-0000-1000-8000-00805f9b34fb: (Handle: 13) (read) | Name: System ID, Value: b'<\x14\x00\x00\x00\x07BI' 
+[Service] 00001801-0000-1000-8000-00805f9b34fb: Generic Attribute Profile
+  [Characteristic] 00002a05-0000-1000-8000-00805f9b34fb: (Handle: 9) (indicate) | Name: Service Changed, Value: None 
+    [Descriptor] 00002902-0000-1000-8000-00805f9b34fb: (Handle: 11) | Value: b'\x02\x00'
+
+
+
+==================
+
+
+    # for service in dev.services:
+    #   print("[Service] {0}: {1}".format(service.uuid, service.description))
+    #   for char in service.characteristics:
+    #       if "read" in char.properties:
+    #           try:
+    #               value = bytes(await dev.read_gatt_char(char.uuid))
+    #           except Exception as e:
+    #               value = str(e).encode()
+    #       else:
+    #           value = None
+    #       print(
+    #           "\t[Characteristic] {0}: (Handle: {1}) ({2}) | Name: {3}, Value: {4} ".format(
+    #               char.uuid,
+    #               char.handle,
+    #               ",".join(char.properties),
+    #               char.description,
+    #               value,
+    #           )
+    #       )
+    #       for descriptor in char.descriptors:
+    #           value = await dev.read_gatt_descriptor(descriptor.handle)
+    #           print(
+    #               "\t\t[Descriptor] {0}: (Handle: {1}) | Value: {2} ".format(
+    #                   descriptor.uuid, descriptor.handle, bytes(value)
+    #               )
+    #           )

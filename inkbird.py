@@ -40,7 +40,9 @@ def import_maybe_installing_with_pip(import_name, pkg_name=None):
 # yay -S python-pybluez (arch linux breaks when using pip for this b/c too new libs)
 # bluetooth = import_maybe_installing_with_pip('bluetooth', 'pybluez')
 
-bluepy = import_maybe_installing_with_pip('bluepy')
+#bluepy = import_maybe_installing_with_pip('bluepy') # Linux only
+
+bleak = import_maybe_installing_with_pip('bleak')
 
 def float_value(nums):
   # check if temp is negative
@@ -59,73 +61,58 @@ def signal_handler(sig, frame):
 def c_to_f(temperature_c):
   return round(9.0/5.0 * temperature_c + 32, 3)
 
-def read_temp(dev, characteristic):
+async def read_temp(dev, characteristic):
   try:
-    readings = dev.readCharacteristic(characteristic)
+    #readings = dev.readCharacteristic(characteristic)
+    readings = await dev.read_gatt_char(int(characteristic))
     return float_value(readings[0:2])
   except:
     traceback.print_exc()
     return None
 
+async def main():
+  global exit_flag
+
+  dev_addr = '49:42:07:00:14:3c' # from engbird app
+  temp_adjustment_deg_c = -2.5 # Sensor cannot be calibrated, is a s/w fix to print calibrated reading.
+
+  print(f'Querying {dev_addr}')
+
+  async with bleak.BleakClient(dev_addr) as dev:
+    #dev = bluepy.btle.Peripheral(dev_addr, addrType=bluepy.btle.ADDR_TYPE_PUBLIC)
+
+    
+    while not exit_flag:
+      if not dev.is_connected:
+        print('Calling dev.connect()...')
+        await dev.connect()
+
+      #temp_c = await read_temp(dev, 0x24) # Whoops?
+      temp_c = await read_temp(dev, 0x23)
+      if not temp_c is None:
+        temp_c += temp_adjustment_deg_c
+
+      if temp_c is None:
+        #dev = bluepy.btle.Peripheral(dev_addr, addrType=bluepy.btle.ADDR_TYPE_PUBLIC)
+        try:
+          print('Calling dev.disconnect()...')
+          await dev.disconnect()
+        except:
+          traceback.print_exc()
+
+        print('dev = bleak.BleakClient(dev_addr) ...')
+        dev = bleak.BleakClient(dev_addr)
+        print('No temp reading!')
+        time.sleep(2)
+        continue
+
+      print(f'temp is {temp_c}c, {c_to_f(temp_c)}f')
+
+      time.sleep(2)
 
 
 if __name__ == '__main__':
   signal.signal(signal.SIGINT, signal_handler)
-
-  dev_addr = '49:42:07:00:14:3c' # from engbird app
-
-  print(f'Querying {dev_addr}')
-
-  dev = bluepy.btle.Peripheral(dev_addr, addrType=bluepy.btle.ADDR_TYPE_PUBLIC)
-  
-  while not exit_flag:
-    temp_c = read_temp(dev, 0x24)
-    
-    if temp_c is None:
-      dev = bluepy.btle.Peripheral(dev_addr, addrType=bluepy.btle.ADDR_TYPE_PUBLIC)
-      print('No temp reading!')
-      time.sleep(2)
-      continue
-
-    print(f'temp is {temp_c}c, {c_to_f(temp_c)}f')
-
-    time.sleep(2)
-
-
-  sys.exit(0)
-
-  #for characteristic in range(0x00, 0xff):
-  #for characteristic in range(0x28, 0x29):
-  for characteristic in range(0x24, 0x24+1):
-    if exit_flag:
-      continue
-    try:
-      #characteristic = 0x28
-      readings = dev.readCharacteristic(characteristic)
-      
-      try:
-        temperature_c = float_value(readings[0:2])
-      except:
-        traceback.print_exc()
-        temperature_c = -1.0
-      
-      print(f'characteristic={hex(characteristic)}')
-      print(f'raw readings={readings}')
-      print(f'temperature_c={temperature_c}')
-
-      # if temperature_c > 25 and temperature_c < 28: # Used to check phone v python reading
-      #   print('!!! ^^ got it?')
-      #   time.sleep(5)
-
-    except:
-      if 'Invalid handle' in traceback.format_exc():
-        continue
-      traceback.print_exc()
-
-
-
-
-
-  #code.InteractiveConsole(locals=globals()).interact()
+  asyncio.run(main())
 
 
