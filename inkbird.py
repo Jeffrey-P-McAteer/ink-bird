@@ -18,6 +18,12 @@ import code
 import pickle
 import signal
 
+# Config
+dev_addr = '49:42:07:00:14:3c' # device bluetooth MAC from engbird app
+temp_adjustment_deg_c = -2.5   # Sensor cannot be calibrated, app uses a s/w fix to print calibrated reading so we do same
+pushover_user_key = os.environ.get('PUSHOVER_USER_KEY', '')
+pushover_api_token = os.environ.get('PUSHOVER_API_TOKEN', '')
+
 # Utility method to wrap imports with a call to pip to install first.
 # > "100% idiot-proof!" -- guy on street selling rusty dependency chains.
 def import_maybe_installing_with_pip(import_name, pkg_name=None):
@@ -38,11 +44,9 @@ def import_maybe_installing_with_pip(import_name, pkg_name=None):
 
 # 3rd-party libs
 # yay -S python-pybluez (arch linux breaks when using pip for this b/c too new libs)
-# bluetooth = import_maybe_installing_with_pip('bluetooth', 'pybluez')
-
-#bluepy = import_maybe_installing_with_pip('bluepy') # Linux only
 
 bleak = import_maybe_installing_with_pip('bleak')
+pushover = import_maybe_installing_with_pip('pushover', 'python-pushover')
 
 def float_value(nums):
   # check if temp is negative
@@ -73,27 +77,22 @@ async def read_temp(dev, characteristic):
 async def main():
   global exit_flag
 
-  dev_addr = '49:42:07:00:14:3c' # from engbird app
-  temp_adjustment_deg_c = -2.5 # Sensor cannot be calibrated, is a s/w fix to print calibrated reading.
-
+  pushover_client = pushover.Client(pushover_user_key, api_token=pushover_api_token)
+  
   print(f'Querying {dev_addr}')
 
   async with bleak.BleakClient(dev_addr) as dev:
-    #dev = bluepy.btle.Peripheral(dev_addr, addrType=bluepy.btle.ADDR_TYPE_PUBLIC)
 
-    
     while not exit_flag:
       if not dev.is_connected:
         print('Calling dev.connect()...')
         await dev.connect()
 
-      #temp_c = await read_temp(dev, 0x24) # Whoops?
       temp_c = await read_temp(dev, 0x23)
       if not temp_c is None:
         temp_c += temp_adjustment_deg_c
 
       if temp_c is None:
-        #dev = bluepy.btle.Peripheral(dev_addr, addrType=bluepy.btle.ADDR_TYPE_PUBLIC)
         try:
           print('Calling dev.disconnect()...')
           await dev.disconnect()
@@ -103,12 +102,20 @@ async def main():
         print('dev = bleak.BleakClient(dev_addr) ...')
         dev = bleak.BleakClient(dev_addr)
         print('No temp reading!')
-        time.sleep(2)
+        await asyncio.sleep(2)
         continue
 
-      print(f'temp is {temp_c}c, {c_to_f(temp_c)}f')
+      temp_f = c_to_f(temp_c)
+      print(f'temp is {temp_c}c, {temp_f}f')
 
-      time.sleep(2)
+      if temp_f > 60.0:
+        try:
+          pushover_client.send_message(f'InkBird temperature alert: {temp_f}f', title=f'InkBird temperature alert: {temp_f}f')
+        except:
+          traceback.print_exc()
+          pushover_client = pushover.Client(pushover_user_key, api_token=pushover_api_token)
+
+      await asyncio.sleep(4)
 
 
 if __name__ == '__main__':

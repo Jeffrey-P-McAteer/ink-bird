@@ -1,2 +1,5 @@
 __pycache__/
 bad_macs.pickle.bin
+client_secret.json
+gmail_token.json
+
