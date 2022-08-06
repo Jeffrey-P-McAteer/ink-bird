@@ -28,6 +28,8 @@ acceptable_temp_f_bounds = (
 )
 min_notification_delay_s = 15 * 60 # If we have already sent a notification in the last 15 minutes, do not send another until 15 minutes has elapsed.
 temp_measure_poll_time_s = 4 # check temp every 4 seconds
+periodic_report_s = 2 * 60 * 60 # Every 2 hours, send a temp report no matter what
+
 
 # Utility method to wrap imports with a call to pip to install first.
 # > "100% idiot-proof!" -- guy on street selling rusty dependency chains.
@@ -115,9 +117,22 @@ async def main():
       temp_f = c_to_f(temp_c)
       print(f'temp is {temp_c}c, {temp_f}f')
 
+      age_since_last_notification = int(time.time()) - last_notification_s
+      if age_since_last_notification > periodic_report_s:
+        try:
+          print(f'Sending periodic notification because {age_since_last_notification} seconds have passed since last message (which is > {periodic_report_s} seconds for the periodic report)')
+          pushover_client.send_message(f'InkBird temperature: {temp_f}f', title=f'InkBird temperature: {temp_f}f')
+          last_notification_s = int(time.time())
+        except:
+          traceback.print_exc()
+          pushover_client = pushover.Client(pushover_user_key, api_token=pushover_api_token)
+        
+        await asyncio.sleep(temp_measure_poll_time_s)
+        continue
+
       temp_is_acceptable = temp_f < max(acceptable_temp_f_bounds) and temp_f > min(acceptable_temp_f_bounds)
+
       if not temp_is_acceptable:
-        age_since_last_notification = int(time.time()) - last_notification_s
         if age_since_last_notification < min_notification_delay_s:
           print(f'Not notifying because we did so {age_since_last_notification} seconds ago and we must wait at least {min_notification_delay_s}')
           await asyncio.sleep(temp_measure_poll_time_s)
