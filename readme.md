@@ -9,7 +9,7 @@ Requirements:
 
 Deployment:
 
- - Copy script to computer
+ - Copy `inkbird.py` script (above) to computer
  - Set `PUSHOVER_USER_KEY` and `PUSHOVER_API_TOKEN` environment variables to your pushover credentials
  - Tweak any other settings at top of `inkbird.py`
  - Run the command `python inkbird.py`
