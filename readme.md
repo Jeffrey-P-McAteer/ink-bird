@@ -15,4 +15,13 @@ Deployment:
  - Run the command `python inkbird.py`
  - Recieve notifications when temp is out of bounds
 
+# Flashing Pocket CHIP
+
+```bash
+#[ -e Flash-CHIP ] || git clone https://github.com/richardschembri/Flash-CHIP
+[ -e Flash-CHIP ] || git clone  https://github.com/thore-krug/Flash-CHIP.git
+( cd Flash-CHIP ; chmod +x Flash.sh ; ./Flash.sh )
+# ^^ Will install u-boot tools & create udev /etc/udev/rules.d/99-allwinner.rules
+```
+
 
